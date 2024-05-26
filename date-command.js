@@ -4,9 +4,7 @@ const yargs = require('yargs');
 const currentDate = new Date();
 const argArr = process.argv.slice(2);
 
-const argv = yargs
-    .command('add', 'Add number')
-    .command('sub', 'Decrease number',)
+const argv = require('yargs/yargs')(process.argv.slice(2))
     .option('year', {
         alias: 'y',
         describe: 'Current year',
@@ -22,17 +20,28 @@ const argv = yargs
         describe: 'Current date',
         type: 'number'
     })
-    .help()
-    .argv;
+    .command({
+        command: 'add [-d | -m | -y]',
+        describe: 'Добавление интервала к текущей дате',
+        handler: (argv) => {
+            if ( argv.d || argv.m || argv.y ) {
+                return getNewDate(argv);
+            }
+        }
+    }) 
+    .command({
+        command: 'sub [-d | -m | -y]',
+        describe: 'Decrease number',
+        handler: (argv) => {
+            if ( argv.d || argv.m || argv.year ) {
+                ( (argv.date = -argv.d) || (argv.month = -argv.m) || (argv.year = -argv.y) );
+                return getNewDate(argv);
+            }
+        }
+    })
+.help()
+.parse();
 
-if ( argArr[0] === 'add' && Number.isInteger(+argArr[2]) ) {
-    argArr[2] = Number(argArr[2]);
-    return getNewDate(argArr);
-}
-if ( argArr[0] === 'sub' && Number.isInteger(+argArr[2]) ) {
-    argArr[2] = -argArr[2];
-    return getNewDate(argArr);
-} 
 if (argArr[0] !== 'add' && argArr[0] !== 'sub') {
     argArr.forEach( arg => {
         console.log(checkVariable(arg)); 
@@ -43,23 +52,22 @@ if (argArr.length === 0) {
     return console.log(formDate(new Date()));
 }
 
-function getNewDate (argArr) {
-    if ( argv.year ) {  //  if ( argArr[1] === 'year' ) {
-        year = checkVariable(argArr[1], argArr[2]);
+function getNewDate (argv) {
+    if ( argv.year ) {
+        year = checkVariable(argArr[1], argv.year);
     } else {
         year = currentDate.getFullYear();
     }
-    if ( argv.month ) { //  if ( argArr[1] === 'month' ) {
-        month = checkVariable(argArr[1], argArr[2]);
+    if ( argv.month ) {
+        month = checkVariable(argArr[1], argv.month);
     } else {
         month = currentDate.getMonth() + 1;
     }
-    if ( argv.date ) {    //  if ( argArr[1] === '-d' ) {
-        date = checkVariable(argArr[1], argArr[2]);
+    if ( argv.date ) {
+        date = checkVariable(argArr[1], argv.date);
     } else {
         date = currentDate.getDate();
     }
-
     return console.log(formDate(new Date(year, month - 1, date)));
 }
 
